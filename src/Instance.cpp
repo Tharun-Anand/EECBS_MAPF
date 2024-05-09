@@ -3,6 +3,8 @@
 #include <random>      // std::default_random_engine
 #include <chrono>       // std::chrono::system_clock
 #include"Instance.h"
+#include "SingleAgentSolver.h"
+
 
 int RANDOM_WALK_STEPS = 100000;
 
@@ -11,6 +13,7 @@ Instance::Instance(const string& map_fname, const string& agent_fname,
 	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents)
 {
 	bool succ = loadMap();
+	/*
 	if (!succ)
 	{
 		if (num_of_rows > 0 && num_of_cols > 0 && num_of_obstacles >= 0 && 
@@ -25,8 +28,9 @@ Instance::Instance(const string& map_fname, const string& agent_fname,
 			exit(-1);
 		}
 	}
-
+    */
 	succ = loadAgents();
+	/*
 	if (!succ)
 	{
 		if (num_of_agents > 0)
@@ -40,12 +44,14 @@ Instance::Instance(const string& map_fname, const string& agent_fname,
 			exit(-1);
 		}
 	}
+	*/
 
 }
 
-
+/*
 int Instance::randomWalk(int curr, int steps) const
-{
+{   
+	cout<<"hi";
 	for (int walk = 0; walk < steps; walk++)
 	{
 		list<int> l = getNeighbors(curr);
@@ -135,6 +141,7 @@ void Instance::generateRandomAgents(int warehouse_width)
 		}
 	}
 }
+*/
 
 bool Instance::validMove(int curr, int next) const
 {
@@ -142,8 +149,9 @@ bool Instance::validMove(int curr, int next) const
 		return false;
 	if (my_map[next])
 		return false;
-	return getManhattanDistance(curr, next) < 2;
+	return getManhattanDistance(curr, next) <= 2;
 }
+
 
 bool Instance::addObstacle(int obstacle)
 {
@@ -191,7 +199,7 @@ bool Instance::isConnected(int start, int goal)
 		int curr = open.front(); open.pop();
 		if (curr == goal)
 			return true;
-		for (int next : getNeighbors(curr))
+		for (int next : getNeighbors(curr,start,goal))
 		{
 			if (closed[next])
 				continue;
@@ -443,14 +451,33 @@ void Instance::saveAgents() const
 }
 
 
-list<int> Instance::getNeighbors(int curr) const
+list<int> Instance::getNeighbors(int curr,int start,int goal) const
 {
 	list<int> neighbors;
-	int candidates[4] = {curr + 1, curr - 1, curr + num_of_cols, curr - num_of_cols};
-	for (int next : candidates)
+	//needs to  be changed for no of cols for each map
+	if(start%49<goal%49) // change the width of the map here...
+	{
+	 int candidates[4] = {curr + 1,curr - 1, curr + num_of_cols, curr - num_of_cols};
+	
+	 //int candidates[6] = {curr + 1,curr - 1, curr + num_of_cols, curr - num_of_cols,curr + 1+num_of_cols,curr + 1-num_of_cols};
+	 for (int next : candidates)
 	{
 		if (validMove(curr, next))
 			neighbors.emplace_back(next);
 	}
+	}
+	else
+	{
+	 int candidates[4] = {curr + 1,curr - 1, curr + num_of_cols, curr - num_of_cols};
+	 //int candidates[6] = {curr + 1,curr - 1, curr + num_of_cols, curr - num_of_cols,curr - 1-num_of_cols,curr - 1+num_of_cols};
+	 for (int next : candidates)
+	{
+		if (validMove(curr, next))
+			neighbors.emplace_back(next);
+	}
+	}
+
+	 
+	
 	return neighbors;
 }
