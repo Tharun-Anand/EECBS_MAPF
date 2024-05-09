@@ -81,10 +81,10 @@ pair<Path, int> SpaceTimeAStar::findSuboptimalPath(const HLNode& node, const Con
         if (curr->timestep >= constraint_table.length_max)
             continue;
 
-        auto next_locations = instance.getNeighbors(curr->location);
+        auto next_locations = instance.getNeighbors(curr->location,start_location,goal_location);
         next_locations.emplace_back(curr->location);
         for (int next_location : next_locations)
-        {
+        {   
             int next_timestep = curr->timestep + 1;
             if (static_timestep < next_timestep)
             { // now everything is static, so switch to space A* where we always use the same timestep
@@ -94,13 +94,49 @@ pair<Path, int> SpaceTimeAStar::findSuboptimalPath(const HLNode& node, const Con
                 }
                 next_timestep--;
             }
+            
+            //should change for different map width
+            int num_of_cols=49;
+
 
             if (constraint_table.constrained(next_location, next_timestep) ||
                 constraint_table.constrained(curr->location, next_location, next_timestep))
                 continue;
+            
+            if(next_location==curr->location+num_of_cols+1)
+            {
+                if (constraint_table.constrained(next_location-1, next_timestep) ||constraint_table.constrained(next_location-num_of_cols, next_timestep)||
+                constraint_table.constrained(curr->location, next_location, next_timestep))
+                continue;
+            }
+
+             if(next_location==curr->location+num_of_cols-1)
+            {
+                if (constraint_table.constrained(next_location+1, next_timestep) ||constraint_table.constrained(next_location-num_of_cols, next_timestep)||
+                constraint_table.constrained(curr->location, next_location, next_timestep))
+                continue;
+            }
+
+            if(next_location==curr->location-num_of_cols-1)
+            {
+                if (constraint_table.constrained(next_location+1, next_timestep) ||constraint_table.constrained(next_location+num_of_cols, next_timestep)||
+                constraint_table.constrained(curr->location, next_location, next_timestep))
+                continue;
+            }
+
+             if(next_location==curr->location-num_of_cols+1)
+            {
+                if (constraint_table.constrained(next_location-1, next_timestep) ||constraint_table.constrained(next_location+num_of_cols, next_timestep)||
+                constraint_table.constrained(curr->location, next_location, next_timestep))
+                continue;
+            }
+
+
 
             // compute cost to next_id via curr node
             int next_g_val = curr->g_val + 1;
+
+
             int next_h_val = max(lowerbound - next_g_val, my_heuristic[next_location]);
             if (next_g_val + next_h_val > constraint_table.length_max)
                 continue;
@@ -184,7 +220,7 @@ int SpaceTimeAStar::getTravelTime(int start, int end, const ConstraintTable& con
             length = curr->g_val;
             break;
         }
-        list<int> next_locations = instance.getNeighbors(curr->location);
+        list<int> next_locations = instance.getNeighbors(curr->location,start_location,goal_location);
         next_locations.emplace_back(curr->location);
         for (int next_location : next_locations)
         {
